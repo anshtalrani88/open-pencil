@@ -95,6 +95,8 @@ export class TiledSceneController {
   private index: RenderChunkIndex | null = null
   private pageId: string | null = null
   private contentGeneration = -1
+  /** The dot grid the cached tiles were painted with, which a document kind change replaces. */
+  private dotGrid: number | null = null
   private navigationGeneration = -1
   private navigationActive = false
   private cancelledJobs = 0
@@ -203,6 +205,10 @@ export class TiledSceneController {
   ): TiledSceneFrameResult {
     this.navigationGeneration = navigationGeneration
     this.navigationActive = this.isNavigationActive(renderer)
+    if (renderer.pageDotGrid !== this.dotGrid) {
+      this.invalidate()
+      this.dotGrid = renderer.pageDotGrid
+    }
     this.prepareGeneration(renderer, graph, contentGeneration, navigationGeneration)
     const viewport = {
       minX: -renderer.panX / renderer.zoom,
