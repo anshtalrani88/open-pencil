@@ -31,10 +31,29 @@ function createCollabPanelContext() {
   })
   const isJoining = computed(() => !!pendingRoomId.value && !state.value.connected)
 
+  /**
+   * A host that already knows who you are joins you automatically.
+   *
+   * When this canvas is embedded (Flyn passes ?name= with the signed-in user), asking "someone
+   * shared this file with you — enter your name" is both a lie and a hole: the host authenticated
+   * the person and resolved their access, and letting them type any name makes the cursor labels
+   * on a shared board decoration rather than fact.
+   *
+   * Standalone, with no name in the URL, nothing changes — the prompt is exactly right for a link
+   * pasted to a stranger.
+   */
+  const embeddedName = new URLSearchParams(window.location.search).get('name')?.trim()
+
   watch(
     pendingRoomId,
     (roomId) => {
-      if (!state.value.connected) popoverOpen.value = !!roomId
+      if (state.value.connected) return
+      if (roomId && embeddedName) {
+        nameDraft.value = embeddedName
+        join()
+        return
+      }
+      popoverOpen.value = !!roomId
     },
     { immediate: true }
   )
